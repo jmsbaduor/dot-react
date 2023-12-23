@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Dot Grid with p5.js</title>
+    <title>Interactive Particle Grid with p5.js</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <style>
         body {
@@ -19,7 +19,7 @@
             transform: translate(-50%, -50%);
             font-family: 'JetBrains Mono', monospace;
             font-size: 16px;
-            color: rgb(73, 73, 73);
+            color: white;
             text-align: center;
             background-color: black;
             padding: 0.5rem 2rem;
@@ -32,41 +32,67 @@
         <p>DOTS REACTIVE BY JAMES</p>
     </div>
     <script>
-        const dotSize = 12;
-        const gap = 12;
         let dots = [];
+        const dotSize = 8;
+        const gap = 20; // Increased gap
+        const maxDisplacement = 50; // Max displacement
+        let isMouseNearDot = false;
+
+        class Dot {
+            constructor(x, y) {
+                this.originalX = x;
+                this.originalY = y;
+                this.x = x;
+                this.y = y;
+                this.vx = 0;
+                this.vy = 0;
+            }
+
+            update() {
+                let d = dist(mouseX, mouseY, this.x, this.y);
+                if (d < maxDisplacement) {
+                    isMouseNearDot = true;
+                    let angle = atan2(this.y - mouseY, this.x - mouseX);
+                    this.vx += cos(angle) * 0.2; // Smoother velocity
+                    this.vy += sin(angle) * 0.2; // Smoother velocity
+                } else if (isMouseNearDot) {
+                    let dx = (this.originalX - this.x) * 0.02; // Smoother easing
+                    let dy = (this.originalY - this.y) * 0.02; // Smoother easing
+                    this.vx += dx;
+                    this.vy += dy;
+                }
+
+                this.x += this.vx;
+                this.y += this.vy;
+
+                this.vx *= 0.8; // Increased damping
+                this.vy *= 0.8; // Increased damping
+
+                fill(72, 72, 72);
+                noStroke();
+                ellipse(this.x, this.y, dotSize, dotSize);
+            }
+        }
 
         function setup() {
             createCanvas(windowWidth, windowHeight);
-            const cols = floor(width / (dotSize + gap));
-            const rows = floor(height / (dotSize + gap));
+            let cols = floor(width / (dotSize + gap));
+            let rows = floor(height / (dotSize + gap));
 
             for (let i = 0; i < rows; i++) {
                 for (let j = 0; j < cols; j++) {
                     let x = j * (dotSize + gap) + gap;
                     let y = i * (dotSize + gap) + gap;
-                    dots.push({ x, y, offsetX: 0, offsetY: 0 });
+                    dots.push(new Dot(x, y));
                 }
             }
         }
 
         function draw() {
             background(0);
-            const maxDisplacement = 120;
-
+            isMouseNearDot = false;
             for (let dot of dots) {
-                let d = dist(mouseX, mouseY, dot.x + dot.offsetX, dot.y + dot.offsetY);
-                if (d < maxDisplacement) {
-                    dot.offsetX = (dot.x - mouseX) * 0.3;
-                    dot.offsetY = (dot.y - mouseY) * 0.3;
-                } else {
-                    dot.offsetX *= 0.7;
-                    dot.offsetY *= 0.7;
-                }
-
-                fill(72, 72, 72);
-                noStroke();
-                ellipse(dot.x + dot.offsetX, dot.y + dot.offsetY, dotSize, dotSize);
+                dot.update();
             }
         }
 
