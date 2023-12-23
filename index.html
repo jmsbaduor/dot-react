@@ -24,19 +24,44 @@
             background-color: black;
             padding: 0.5rem 2rem;
             z-index: 10;
+            opacity: 0;
+            animation: fadeIn 2s ease 4s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent; }
+            50% { border-color: white; }
+        }
+
+        .text {
+            border-right: 2px solid white;
+            white-space: nowrap;
+            overflow: hidden;
+            animation: typing 2s steps(30, end) 4s forwards, blink-caret 0.75s step-end infinite 4s;
         }
     </style>
 </head>
 <body>
     <div class="text-container">
-        <p>DOTS REACTIVE BY JAMES</p>
+        <p class="text">DOTS REACTIVE BY JAMES</p>
     </div>
     <script>
         let dots = [];
         const dotSize = 8;
         const gap = 20;
         const maxDisplacement = 50;
-        let isMouseNearDot = false;
+        let animationStartTime;
+        const animationDelay = 2000;
+        const animationDuration = 2000;
 
         class Dot {
             constructor(x, y) {
@@ -49,16 +74,10 @@
             }
 
             update() {
-                // Apply velocity and damping
                 this.x += this.vx;
                 this.y += this.vy;
                 this.vx *= 0.8;
                 this.vy *= 0.8;
-
-                // Draw dot
-                fill(72, 72, 72);
-                noStroke();
-                ellipse(this.x, this.y, dotSize, dotSize);
             }
 
             interact(tx, ty) {
@@ -67,12 +86,14 @@
                     let angle = atan2(this.y - ty, this.x - tx);
                     this.vx += cos(angle) * 0.2;
                     this.vy += sin(angle) * 0.2;
-                } else {
-                    let dx = (this.originalX - this.x) * 0.02;
-                    let dy = (this.originalY - this.y) * 0.02;
-                    this.vx += dx;
-                    this.vy += dy;
                 }
+            }
+
+            draw(scale) {
+                let scaledSize = scale * dotSize;
+                fill(72, 72, 72);
+                noStroke();
+                ellipse(this.x, this.y, scaledSize, scaledSize);
             }
         }
 
@@ -80,6 +101,7 @@
             createCanvas(windowWidth, windowHeight);
             let cols = floor(width / (dotSize + gap));
             let rows = floor(height / (dotSize + gap));
+            animationStartTime = millis() + animationDelay;
 
             for (let i = 0; i < rows; i++) {
                 for (let j = 0; j < cols; j++) {
@@ -92,32 +114,27 @@
 
         function draw() {
             background(0);
+            let currentTime = millis();
 
-            // Handle mouse hover interaction
-            if (!mouseIsPressed) {
-                dots.forEach(dot => dot.interact(mouseX, mouseY));
+            if (currentTime > animationStartTime) {
+                let elapsedTime = currentTime - animationStartTime;
+                for (let dot of dots) {
+                    dot.update();
+                    if (mouseIsPressed || touches.length > 0) {
+                        dot.interact(mouseX, mouseY);
+                        for (let i = 0; i < touches.length; i++) {
+                            dot.interact(touches[i].x, touches[i].y);
+                        }
+                    }
+                    let staggerTime = map(dot.originalY, 0, height, 0, animationDuration);
+                    let scale = min(1, max(0, (elapsedTime - staggerTime) / animationDuration));
+                    dot.draw(scale);
+                }
             }
-
-            // Handle touch interactions
-            for (let i = 0; i < touches.length; i++) {
-                dots.forEach(dot => dot.interact(touches[i].x, touches[i].y));
-            }
-
-            // Check for touch interactions
-            for (let i = 0; i < touches.length; i++) {
-                dots.forEach(dot => dot.interact(touches[i].x, touches[i].y));
-            }
-
-            for (let i = 0; i < touches.length; i++) {
-    dots.forEach(dot => dot.interact(touches[i].x, touches[i].y));
-}
-
-            dots.forEach(dot => dot.update());
         }
 
         function windowResized() {
             resizeCanvas(windowWidth, windowHeight);
         }
     </script>
-</body>
-</html>
+</body
