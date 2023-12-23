@@ -93,9 +93,14 @@
         function draw() {
             background(0);
 
-            // Check for mouse interaction
-            if (mouseIsPressed) {
+            // Handle mouse hover interaction
+            if (!mouseIsPressed) {
                 dots.forEach(dot => dot.interact(mouseX, mouseY));
+            }
+
+            // Handle touch interactions
+            for (let i = 0; i < touches.length; i++) {
+                dots.forEach(dot => dot.interact(touches[i].x, touches[i].y));
             }
 
             // Check for touch interactions
@@ -103,12 +108,12 @@
                 dots.forEach(dot => dot.interact(touches[i].x, touches[i].y));
             }
 
-            dots.forEach(dot => dot.update());
-        }
-        for (let i = 0; i < touches.length; i++) {
+            for (let i = 0; i < touches.length; i++) {
     dots.forEach(dot => dot.interact(touches[i].x, touches[i].y));
 }
 
+            dots.forEach(dot => dot.update());
+        }
 
         function windowResized() {
             resizeCanvas(windowWidth, windowHeight);
