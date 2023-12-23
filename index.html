@@ -62,6 +62,7 @@
         let animationStartTime;
         const animationDelay = 2000;
         const animationDuration = 2000;
+        let animationCompleted = false;
 
         class Dot {
             constructor(x, y) {
@@ -71,13 +72,20 @@
                 this.y = y;
                 this.vx = 0;
                 this.vy = 0;
+                this.isInteracting = false;
             }
 
             update() {
+                // Apply easing back to original position if not interacting
+                if (!this.isInteracting) {
+                    this.vx += (this.originalX - this.x) * 0.05;
+                    this.vy += (this.originalY - this.y) * 0.05;
+                }
+
                 this.x += this.vx;
                 this.y += this.vy;
-                this.vx *= 0.8;
-                this.vy *= 0.8;
+                this.vx *= 0.8; // Damping
+                this.vy *= 0.8; // Damping
             }
 
             interact(tx, ty) {
@@ -86,6 +94,9 @@
                     let angle = atan2(this.y - ty, this.x - tx);
                     this.vx += cos(angle) * 0.2;
                     this.vy += sin(angle) * 0.2;
+                    this.isInteracting = true;
+                } else {
+                    this.isInteracting = false;
                 }
             }
 
@@ -115,20 +126,25 @@
         function draw() {
             background(0);
             let currentTime = millis();
+            let elapsedTime = currentTime - animationStartTime;
 
-            if (currentTime > animationStartTime) {
-                let elapsedTime = currentTime - animationStartTime;
-                for (let dot of dots) {
-                    dot.update();
-                    if (mouseIsPressed || touches.length > 0) {
-                        dot.interact(mouseX, mouseY);
-                        for (let i = 0; i < touches.length; i++) {
-                            dot.interact(touches[i].x, touches[i].y);
-                        }
-                    }
+            for (let dot of dots) {
+                if (!animationCompleted) {
                     let staggerTime = map(dot.originalY, 0, height, 0, animationDuration);
                     let scale = min(1, max(0, (elapsedTime - staggerTime) / animationDuration));
                     dot.draw(scale);
+                    if (scale === 1) {
+                        animationCompleted = true;
+                    }
+                } else {
+                    dot.update();
+                    if (mouseIsPressed || touches.length > 0) {
+                        dot.interact(mouseX, mouseY);
+                        for (let touch of touches) {
+                            dot.interact(touch.x, touch.y);
+                        }
+                    }
+                    dot.draw(1);
                 }
             }
         }
@@ -137,4 +153,5 @@
             resizeCanvas(windowWidth, windowHeight);
         }
     </script>
-</body
+</body>
+</html>
