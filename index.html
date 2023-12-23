@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Dot Grid with p5.js</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: black;
+        }
+
+        .text-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            color: rgb(73, 73, 73);
+            text-align: center;
+            background-color: black;
+            padding: 0.5rem 2rem;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div class="text-container">
+        <p>DOTS REACTIVE BY JAMES</p>
+    </div>
+    <script>
+        const dotSize = 12;
+        const gap = 12;
+        let dots = [];
+
+        function setup() {
+            createCanvas(windowWidth, windowHeight);
+            const cols = floor(width / (dotSize + gap));
+            const rows = floor(height / (dotSize + gap));
+
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    let x = j * (dotSize + gap) + gap;
+                    let y = i * (dotSize + gap) + gap;
+                    dots.push({ x, y, offsetX: 0, offsetY: 0 });
+                }
+            }
+        }
+
+        function draw() {
+            background(0);
+            const maxDisplacement = 120;
+
+            for (let dot of dots) {
+                let d = dist(mouseX, mouseY, dot.x + dot.offsetX, dot.y + dot.offsetY);
+                if (d < maxDisplacement) {
+                    dot.offsetX = (dot.x - mouseX) * 0.3;
+                    dot.offsetY = (dot.y - mouseY) * 0.3;
+                } else {
+                    dot.offsetX *= 0.7;
+                    dot.offsetY *= 0.7;
+                }
+
+                fill(72, 72, 72);
+                noStroke();
+                ellipse(dot.x + dot.offsetX, dot.y + dot.offsetY, dotSize, dotSize);
+            }
+        }
+
+        function windowResized() {
+            resizeCanvas(windowWidth, windowHeight);
+        }
+    </script>
+</body>
+</html>
