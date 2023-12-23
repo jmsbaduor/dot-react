@@ -105,6 +105,10 @@
 
             dots.forEach(dot => dot.update());
         }
+        for (let i = 0; i < touches.length; i++) {
+    dots.forEach(dot => dot.interact(touches[i].x, touches[i].y));
+}
+
 
         function windowResized() {
             resizeCanvas(windowWidth, windowHeight);
