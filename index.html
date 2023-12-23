@@ -34,8 +34,8 @@
     <script>
         let dots = [];
         const dotSize = 8;
-        const gap = 20; // Increased gap
-        const maxDisplacement = 50; // Max displacement
+        const gap = 20;
+        const maxDisplacement = 50;
         let isMouseNearDot = false;
 
         class Dot {
@@ -49,28 +49,30 @@
             }
 
             update() {
-                let d = dist(mouseX, mouseY, this.x, this.y);
-                if (d < maxDisplacement) {
-                    isMouseNearDot = true;
-                    let angle = atan2(this.y - mouseY, this.x - mouseX);
-                    this.vx += cos(angle) * 0.2; // Smoother velocity
-                    this.vy += sin(angle) * 0.2; // Smoother velocity
-                } else if (isMouseNearDot) {
-                    let dx = (this.originalX - this.x) * 0.02; // Smoother easing
-                    let dy = (this.originalY - this.y) * 0.02; // Smoother easing
-                    this.vx += dx;
-                    this.vy += dy;
-                }
-
+                // Apply velocity and damping
                 this.x += this.vx;
                 this.y += this.vy;
+                this.vx *= 0.8;
+                this.vy *= 0.8;
 
-                this.vx *= 0.8; // Increased damping
-                this.vy *= 0.8; // Increased damping
-
+                // Draw dot
                 fill(72, 72, 72);
                 noStroke();
                 ellipse(this.x, this.y, dotSize, dotSize);
+            }
+
+            interact(tx, ty) {
+                let d = dist(tx, ty, this.x, this.y);
+                if (d < maxDisplacement) {
+                    let angle = atan2(this.y - ty, this.x - tx);
+                    this.vx += cos(angle) * 0.2;
+                    this.vy += sin(angle) * 0.2;
+                } else {
+                    let dx = (this.originalX - this.x) * 0.02;
+                    let dy = (this.originalY - this.y) * 0.02;
+                    this.vx += dx;
+                    this.vy += dy;
+                }
             }
         }
 
@@ -90,10 +92,18 @@
 
         function draw() {
             background(0);
-            isMouseNearDot = false;
-            for (let dot of dots) {
-                dot.update();
+
+            // Check for mouse interaction
+            if (mouseIsPressed) {
+                dots.forEach(dot => dot.interact(mouseX, mouseY));
             }
+
+            // Check for touch interactions
+            for (let i = 0; i < touches.length; i++) {
+                dots.forEach(dot => dot.interact(touches[i].x, touches[i].y));
+            }
+
+            dots.forEach(dot => dot.update());
         }
 
         function windowResized() {
